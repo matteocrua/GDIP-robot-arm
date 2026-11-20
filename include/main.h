@@ -4,9 +4,9 @@
 
 // ---------- Arm geometry (mm) ----------
 const ArmGeometry ARM = {
-  70.0f,    // base height
-  146.1f,   // l1 (J1 - J2)
-  187.3f,   // l2 (J2 - J3)
+  90.0f,    // base height
+  147.0f,   // l1 (J1 - J2)
+  182.5f,   // l2 (J2 - J3)
   50.0f     // l3 (J3 - end effector)
 };
 
