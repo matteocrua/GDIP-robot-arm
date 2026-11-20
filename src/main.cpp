@@ -26,54 +26,14 @@
 
 #include "main.h" // header file
 #include <math.h>
-#include <stdlib.h>
-#include <string.h>
 
-bool moveTo(float x, float y, float z);
 
-static bool parseCoordinate(const char *token, float &value) {
-  char *end;
-  double parsed = strtod(token, &end);
-  if (end == token || *end != '\0' || !isfinite(parsed)) return false;
-  value = (float)parsed;
-  return true;
-}
-
-static void processSerialCommand(char *line) {
-  char *token = strtok(line, " \t");
-  if (token == NULL) return;
-
-  bool hasMoveTo = strcmp(token, "moveto") == 0;
-  if (hasMoveTo) {
-    token = strtok(NULL, " \t");
-  }
-
-  float x, y, z;
-  if (token == NULL || !parseCoordinate(token, x)) {
-    Serial.println("Usage: moveto <x> <y> <z> (mm)");
-    return;
-  }
-
-  token = strtok(NULL, " \t");
-  if (token == NULL || !parseCoordinate(token, y)) {
-    Serial.println("Usage: moveto <x> <y> <z> (mm)");
-    return;
-  }
-
-  token = strtok(NULL, " \t");
-  if (token == NULL || !parseCoordinate(token, z) ||
-      strtok(NULL, " \t") != NULL) {
-    Serial.println("Usage: moveto <x> <y> <z> (mm)");
-    return;
-  }
-
-  moveTo(x, y, z);
-}
 
 void setServoAngle(uint8_t ch, float deg) {
   deg = constrain(deg, 0.0f, 180.0f);
   float us = PULSE_MIN_US + (deg / 180.0f) * (PULSE_MAX_US - PULSE_MIN_US);
   pwm.writeMicroseconds(ch, (uint16_t)us);
+  if (ch < 4) currentServoAngles[ch] = deg;
 }
 
 bool moveTo(float x, float y, float z) {
@@ -99,10 +59,30 @@ bool moveTo(float x, float y, float z) {
     return false;
   }
 
-  setServoAngle(CH_BASE, sb);
-  setServoAngle(CH_J1, s1);
-  setServoAngle(CH_J2, s2);
-  setServoAngle(CH_J3, s3);
+  const uint8_t channels[] = {CH_BASE, CH_J1, CH_J2, CH_J3};
+  const float targets[] = {sb, s1, s2, s3};
+  float startAngles[4];
+  float maxDelta = 0.0f;
+
+  for (uint8_t i = 0; i < 4; ++i) {
+    startAngles[i] = currentServoAngles[channels[i]];
+    float delta = fabsf(targets[i] - startAngles[i]);
+    if (delta > maxDelta) maxDelta = delta;
+  }
+
+  int steps = (int)maxDelta;
+  if ((float)steps < maxDelta) ++steps;
+  if (steps < 1) steps = 1;
+
+  for (int step = 1; step <= steps; ++step) {
+    float t = (float)step / steps;
+    float eased = t * t * (3.0f - 2.0f * t);
+    for (uint8_t i = 0; i < 4; ++i) {
+      float angle = startAngles[i] + (targets[i] - startAngles[i]) * eased;
+      setServoAngle(channels[i], angle);
+    }
+    delay(20);
+  }
   return true;
 }
 
@@ -113,7 +93,8 @@ void setup() {
   pwm.setPWMFreq(SERVO_FREQ);
   delay(10);
 
-  Serial.println("Enter: moveto <x> <y> <z> (mm, e.g. moveto 250 120 0)");
+  Serial.println("Enter target as: x y   (mm, e.g. 250 120)");
+  setServoAngle(CH_BASE, BASE_OFFSET);
   setServoAngle(CH_J1, OFFSET[0]*DIR[0]);
   setServoAngle(CH_J2, OFFSET[1]*DIR[1]);
   setServoAngle(CH_J3, OFFSET[2]*DIR[2]);
@@ -123,30 +104,12 @@ void setup() {
 }
 
 void loop() {
-  static char line[64];
-  static uint8_t lineLength = 0;
-  static bool lineTooLong = false;
-
-  while (Serial.available()) {
-    char character = (char)Serial.read();
-    if (character == '\r') continue;
-
-    if (character == '\n') {
-      if (lineTooLong) {
-        Serial.println("Command too long");
-      } else {
-        line[lineLength] = '\0';
-        processSerialCommand(line);
-      }
-      lineLength = 0;
-      lineTooLong = false;
-    } else if (!lineTooLong) {
-      if (lineLength < sizeof(line) - 1) {
-        line[lineLength++] = character;
-      } else {
-        lineTooLong = true;
-      }
-    }
+  if (Serial.available()) {
+    float x = Serial.parseFloat();
+    float y = Serial.parseFloat();
+    float z = Serial.parseFloat();
+    while (Serial.available()) Serial.read();
+    moveTo(x, y, z);
   }
 }
 

@@ -27,7 +27,7 @@ const float OFFSET[3] = {81.0f, 81.0f, 83.0f};    // shoulder, elbow, wrist (wri
 const float DIR[3]    = { 1.0f,  -1.0f,  1.0f};
 const float BASE_DIR = 1.0f;   // flip to -1 if the base turns the wrong way
 
-
+static float currentServoAngles[4];
 
 
 
