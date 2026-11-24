@@ -1,0 +1,11 @@
+#ifndef COLLECT_H
+#define COLLECT_H
+
+#include "moveTo.h"
+#include "global.h"
+
+extern float keyLocations[3][3];
+
+void collectKey(int keyID);
+
+#endif
