@@ -2,41 +2,40 @@
 
 int offsetX = 70; // offset in mm to move away from the key location after collecting the key
 
-// a set of functiona to collect keys from a predifined set of locations and return them to the user x, y, angle) in mm and degrees
-
-// vertical array of predefined locations for the robot arm to collect keys from
+// predefined key locations: {reach mm, height mm, base angle deg}
 float keyLocations[3][3] = {
-  {400, 130, 90},   // location 1
-  {400, 230, 90},   // location 2
-  {400, 300, 90}    // location 3
+  {400, 130, 90},   // key 1
+  {400, 230, 90},   // key 2
+  {400, 300, 90}    // key 3
 };
 
-void collectKey(int keyID){
+// Returns true if the whole sequence succeeded, false if any move failed
+bool collectKey(int keyID) {
 
-    if (keyID < 1 || keyID > 3){
-        Serial.println("Invalid key ID. Please enter a value between 1 and 3.");
-        return;
+    if (keyID < 1 || keyID > 3) {
+        Serial.println("Invalid key ID");
+        return false;
     }
 
-    // user types in serial terminal the key ID to collect, and the robot arm will move to the corresponding location and pick up the key
-    Serial.println("Collecting key " + String(keyID + 1) + "...");
+    Serial.println("Collecting key " + String(keyID) + "...");
 
-    keyID = keyID - 1; // convert to 0-based index
+    int i = keyID - 1; // convert to 0-based index
 
     // move towards key location
-    moveTo(keyLocations[keyID][0] - offsetX, keyLocations[keyID][1], keyLocations[keyID][2]);
-    delay(100); // wait for 1.5 seconds before moving to the target position
+    if (!moveTo(keyLocations[i][0] - offsetX, keyLocations[i][1], keyLocations[i][2])) return false;
+    delay(100);
 
     // move into key location
-    moveTo(keyLocations[keyID][0], keyLocations[keyID][1], keyLocations[keyID][2]);
-    delay(2200); // wait for 1 second before moving to the target position
+    if (!moveTo(keyLocations[i][0], keyLocations[i][1], keyLocations[i][2])) return false;
+    delay(2200);
 
     // move away from key location
-    moveTo(keyLocations[keyID][0] - offsetX, keyLocations[keyID][1], keyLocations[keyID][2]);
-    delay(100); // wait for 3 seconds before moving to the target position
+    if (!moveTo(keyLocations[i][0] - offsetX, keyLocations[i][1], keyLocations[i][2])) return false;
+    delay(100);
 
-    // after collecting the key, the robot arm will return to its starting position
+    // return to starting position
     Serial.println("Returning to starting position...");
-    moveTo(250, 120, 0); // reach 250mm, height 120mm, base angle 0 degrees
+    if (!moveTo(250, 120, 0)) return false;
 
-}
+    return true;
+}   

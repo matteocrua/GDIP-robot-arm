@@ -7,6 +7,6 @@
 extern float keyLocations[3][3];
 extern int offsetX;
 
-void collectKey(int keyID);
+bool collectKey(int keyID);
 
 #endif

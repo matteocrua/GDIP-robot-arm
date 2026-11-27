@@ -50,17 +50,22 @@ void setup() {
 
 void loop() {
   if (Serial.available()) {
+    String line = Serial.readStringUntil('\n');
+    line.trim();
 
-    // prompt the user to enter a key ID to collect
-    Serial.println("What key would you like to collect? (1, 2, or 3)");
+    if (line.startsWith("KEY:")) {
+      int keyID = line.substring(4).toInt();
 
-    // read the key ID from the serial input
-    int keyID = Serial.parseInt();
+      if (keyID < 1 || keyID > 3) {
+        Serial.println("ERROR: invalid key ID");
+        return;
+      }
 
-    // call collectKey function with the keyID
-    collectKey(keyID);
-
-    delay(10); // wait for 10ms
-    Serial.println("Key collected successfully.");
+      if (collectKey(keyID)) {
+        Serial.println("DONE");
+      } else {
+        Serial.println("ERROR: move failed");
+      }
+    }
   }
 }
