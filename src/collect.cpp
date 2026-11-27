@@ -6,9 +6,9 @@ int offsetX = 70; // offset in mm to move away from the key location after colle
 
 // vertical array of predefined locations for the robot arm to collect keys from
 float keyLocations[3][3] = {
-  {200, 130, 90},   // location 1
-  {200, 230, 90},   // location 2
-  {200, 300, 90}    // location 3
+  {400, 130, 90},   // location 1
+  {400, 230, 90},   // location 2
+  {400, 300, 90}    // location 3
 };
 
 void collectKey(int keyID){

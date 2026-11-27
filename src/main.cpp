@@ -24,35 +24,43 @@
   The robot will then return to its starting position.
 */
 
-#include "main.h" // header file
+// Header files
+#include "main.h"
 
 void setup() {
+  // set baud rate for serial communication
   Serial.begin(115200);
 
+  // initialize the PWM driver and set the frequency for the servos
   pwm.begin();
   pwm.setOscillatorFrequency(27000000);
   pwm.setPWMFreq(SERVO_FREQ);
-  delay(10);
-
+  delay(10); // wait for the PWM driver to initialize
+  
+  // set the initial position of the robot arm to the starting position
   setServoAngle(CH_BASE, BASE_OFFSET);
   setServoAngle(CH_J1, OFFSET[0]*DIR[0]);
   setServoAngle(CH_J2, OFFSET[1]*DIR[1]);
   setServoAngle(CH_J3, OFFSET[2]*DIR[2]);
 
   delay(1000); // wait for 1s
-  moveTo(250, 120, 0); // starting pos
-
-  Serial.println("what key would you like to collect? (1, 2, or 3)");
-
+  moveTo(250, 120, 0); // face user starting position
+  
 }
 
 void loop() {
   if (Serial.available()) {
-    int keyID = Serial.parseInt();
-    collectKey(keyID);
-    delay(3000); // wait for 1s
-    Serial.println("Key collected successfully.");
-    Serial.println("what key would you like to collect? (1, 2, or 3)");
 
+    // prompt the user to enter a key ID to collect
+    Serial.println("What key would you like to collect? (1, 2, or 3)");
+
+    // read the key ID from the serial input
+    int keyID = Serial.parseInt();
+
+    // call collectKey function with the keyID
+    collectKey(keyID);
+
+    delay(10); // wait for 10ms
+    Serial.println("Key collected successfully.");
   }
 }

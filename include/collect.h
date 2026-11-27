@@ -5,6 +5,7 @@
 #include "global.h"
 
 extern float keyLocations[3][3];
+extern int offsetX;
 
 void collectKey(int keyID);
 
